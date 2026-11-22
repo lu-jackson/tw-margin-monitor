@@ -140,6 +140,38 @@ def provider():
     return None, None
 
 
+GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta"
+
+
+def _gemini(model, user):
+    out = _post(f"{GEMINI_BASE}/models/{model}:generateContent", {"x-goog-api-key": os.environ["GEMINI_API_KEY"]},
+                {"systemInstruction": {"parts": [{"text": SYSTEM}]},
+                 "contents": [{"role": "user", "parts": [{"text": user}]}],
+                 "generationConfig": {"temperature": 0.2, "maxOutputTokens": 2000, "responseMimeType": "application/json"}})
+    return out["candidates"][0]["content"]["parts"][0]["text"]
+
+
+def _gemini_pick_model():
+    """Newest general-purpose Flash model that supports generateContent (names printed to the log, key never is)."""
+    req = urllib.request.Request(f"{GEMINI_BASE}/models?pageSize=200", headers={"x-goog-api-key": os.environ["GEMINI_API_KEY"]})
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            models = json.loads(r.read().decode("utf-8"))["models"]
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"HTTP {e.code} listing models: {e.read().decode('utf-8', 'replace')[:200]}")
+    names = [m["name"].split("/")[-1] for m in models if "generateContent" in m.get("supportedGenerationMethods", [])]
+    print("Gemini models with generateContent:", ", ".join(names))
+    bad = re.compile(r"image|tts|live|audio|embed|vision|thinking|exp|preview|lite|robotics|computer|learnlm|gemma|aqa|imagen|veo")
+    flash = [n for n in names if "flash" in n and not bad.search(n)]
+    key = lambda n: [int(x) for x in re.findall(r"\d+", n)] or [0]
+    pick = sorted(flash, key=key, reverse=True)
+    if not pick:
+        pick = sorted([n for n in names if n.startswith("gemini") and not bad.search(n)], key=key, reverse=True)
+    if not pick:
+        raise RuntimeError("no usable Gemini model found for this key")
+    return pick[0]
+
+
 def llm_write(facts, feedback=None):
     kind, model = provider()
     if kind is None:
@@ -148,13 +180,14 @@ def llm_write(facts, feedback=None):
     if feedback:
         user += "\n\n上一版被退回，原因：" + "；".join(feedback) + "。請修正後重寫。"
     if kind == "gemini":
-        out = _post(f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
-                    {"x-goog-api-key": os.environ["GEMINI_API_KEY"]},
-                    {"systemInstruction": {"parts": [{"text": SYSTEM}]},
-                     "contents": [{"role": "user", "parts": [{"text": user}]}],
-                     "generationConfig": {"temperature": 0.2, "maxOutputTokens": 2000, "responseMimeType": "application/json",
-                                          "thinkingConfig": {"thinkingBudget": 0}}})
-        txt = out["candidates"][0]["content"]["parts"][0]["text"]
+        try:
+            txt = _gemini(model, user)
+        except RuntimeError as e:
+            if not str(e).startswith("HTTP 404"):   # model retired / renamed: discover a current one and retry once
+                raise
+            model = _gemini_pick_model()
+            print("configured Gemini model not found; using", model)
+            txt = _gemini(model, user)
     else:
         token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
         out = _post(ENDPOINT, {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"},
