@@ -1,0 +1,209 @@
+{
+ "source": "reports/stage8_tables/equations_by_period_horizon.csv (含低維持率模型); stage8_report.md §三",
+ "units": "percentage points of excess 2x-return over horizon",
+ "scenarios": [
+  {
+   "id": "FULL-20",
+   "label": "Full 2009–2025",
+   "window": "2009–2025",
+   "horizon": 20,
+   "n": 4113,
+   "indep_windows": 68.5,
+   "low_days": 152,
+   "terms": [
+    {
+     "var": "zV",
+     "coef": 1.83,
+     "lo": 0.59,
+     "hi": 2.35
+    },
+    {
+     "var": "L145",
+     "coef": 6.13,
+     "lo": 1.86,
+     "hi": 10.81
+    }
+   ],
+   "note": "Both terms significant"
+  },
+  {
+   "id": "FULL-60",
+   "label": "Full 2009–2025",
+   "window": "2009–2025",
+   "horizon": 60,
+   "n": 4073,
+   "indep_windows": 67.9,
+   "low_days": 152,
+   "terms": [
+    {
+     "var": "zV",
+     "coef": 4.67,
+     "lo": 1.61,
+     "hi": 6.37
+    }
+   ],
+   "note": "VIX only; low-margin term CI includes 0"
+  },
+  {
+   "id": "P13-20",
+   "label": "Post-2013",
+   "window": "2013–2025",
+   "horizon": 20,
+   "n": 3155,
+   "indep_windows": 52.6,
+   "low_days": 54,
+   "terms": [
+    {
+     "var": "zV",
+     "coef": 1.43,
+     "lo": 0.42,
+     "hi": 2.31
+    },
+    {
+     "var": "L145",
+     "coef": 11.54,
+     "lo": 4.58,
+     "hi": 16.54
+    }
+   ],
+   "note": "Both terms significant"
+  },
+  {
+   "id": "P13-60",
+   "label": "Post-2013",
+   "window": "2013–2025",
+   "horizon": 60,
+   "n": 3115,
+   "indep_windows": 51.9,
+   "low_days": 54,
+   "terms": [
+    {
+     "var": "zV",
+     "coef": 3.99,
+     "lo": 1.02,
+     "hi": 6.42
+    },
+    {
+     "var": "L145",
+     "coef": 16.54,
+     "lo": 3.32,
+     "hi": 25.47
+    }
+   ],
+   "note": "Both terms significant"
+  },
+  {
+   "id": "P13-120",
+   "label": "Post-2013",
+   "window": "2013–2025",
+   "horizon": 120,
+   "n": 3055,
+   "indep_windows": 25.5,
+   "low_days": 54,
+   "terms": [
+    {
+     "var": "L145",
+     "coef": 23.44,
+     "lo": 8.51,
+     "hi": 40.46
+    }
+   ],
+   "note": "Low-margin only"
+  },
+  {
+   "id": "P13-250",
+   "label": "Post-2013",
+   "window": "2013–2025",
+   "horizon": 250,
+   "n": 2925,
+   "indep_windows": 11.7,
+   "low_days": 50,
+   "terms": [
+    {
+     "var": "L145",
+     "coef": 38.86,
+     "lo": 14.92,
+     "hi": 67.85
+    }
+   ],
+   "note": "Low-margin only · ~12 independent windows"
+  },
+  {
+   "id": "P18-20",
+   "label": "Post-2018",
+   "window": "2018–2025",
+   "horizon": 20,
+   "n": 1927,
+   "indep_windows": 32.1,
+   "low_days": 44,
+   "terms": [
+    {
+     "var": "L145",
+     "coef": 13.47,
+     "lo": 5.58,
+     "hi": 18.92
+    }
+   ],
+   "note": "Low-margin only · VIX unstable across halves"
+  },
+  {
+   "id": "P18-60",
+   "label": "Post-2018",
+   "window": "2018–2025",
+   "horizon": 60,
+   "n": 1887,
+   "indep_windows": 31.4,
+   "low_days": 44,
+   "terms": [
+    {
+     "var": "L145",
+     "coef": 17.89,
+     "lo": 1.39,
+     "hi": 28.63
+    }
+   ],
+   "note": "Low-margin only · VIX unstable across halves"
+  },
+  {
+   "id": "P18-120",
+   "label": "Post-2018",
+   "window": "2018–2025",
+   "horizon": 120,
+   "n": 1827,
+   "indep_windows": 15.2,
+   "low_days": 44,
+   "terms": [
+    {
+     "var": "L145",
+     "coef": 27.91,
+     "lo": 11.73,
+     "hi": 48.92
+    }
+   ],
+   "note": "Low-margin only · VIX not significant"
+  },
+  {
+   "id": "L5-20",
+   "label": "Last 5Y",
+   "window": "2021–2025",
+   "horizon": 20,
+   "n": 1193,
+   "indep_windows": 19.9,
+   "low_days": 34,
+   "terms": [
+    {
+     "var": "L145",
+     "coef": 14.77,
+     "lo": 2.07,
+     "hi": 21.71
+    }
+   ],
+   "note": "Low-margin only · VIX decayed"
+  }
+ ],
+ "early": {
+  "id": "EARLY",
+  "label": "Early 2009–2012",
+  "note": "No stable signal in any term/horizon"
+ }
+}

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TW Margin Monitor</title>
+<meta name="description" content="Taiwan listed-market margin maintenance ratio and VIX monitor with regime-conditional excess-return equations.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- ===== COMMAND BAR ===== -->
+  <header class="cmdbar">
+    <div class="brand"><span class="brand-box">TWM</span><span class="brand-name">TW MARGIN MONITOR</span><span class="brand-sub">融資維持率 · VIX · 條件式方程式</span></div>
+    <div class="feeds" id="feeds"></div>
+    <div class="clocks">
+      <div class="clk"><span class="k">TPE</span><span id="clkTPE">--:--:--</span></div>
+      <div class="clk"><span class="k">NYC</span><span id="clkNYC">--:--:--</span></div>
+    </div>
+  </header>
+
+  <!-- ===== STATUS STRIP ===== -->
+  <section class="strip" id="strip" aria-label="Key readings"></section>
+
+  <!-- ===== MAIN GRID ===== -->
+  <main class="grid">
+
+    <section class="panel charts" aria-label="Charts">
+      <div class="ptitle">
+        <span class="pt">PRICE &amp; SIGNAL HISTORY</span>
+        <span class="range" id="range" role="tablist" aria-label="Range"></span>
+      </div>
+      <div class="chartwrap" id="chartwrap">
+        <div class="pane" id="pane1"><canvas></canvas><div class="legend"></div></div>
+        <div class="pane" id="pane2"><canvas></canvas><div class="legend"></div></div>
+        <div class="pane" id="pane3"><canvas></canvas><div class="legend"></div></div>
+      </div>
+    </section>
+
+    <aside class="side">
+      <section class="panel" id="ladder">
+        <div class="ptitle"><span class="pt">MARGIN RATIO vs REFERENCE LEVELS</span><span class="pc">M / LVL</span></div>
+        <div class="pbody" id="ladderBody"></div>
+      </section>
+      <section class="panel" id="raw">
+        <div class="ptitle"><span class="pt">RAW SOURCE DATA</span><span class="pc">PRIMARY</span></div>
+        <div class="pbody" id="rawBody"></div>
+      </section>
+    </aside>
+
+    <section class="panel models" id="models">
+      <div class="ptitle">
+        <span class="pt">CONDITIONAL EXCESS-RETURN EQUATIONS · 2× LONG</span>
+        <span class="seg" id="basis" role="tablist" aria-label="VIX basis">
+          <button data-b="research" class="on" title="Strict research definition: VIX of the last US session before the Taiwan date">RESEARCH BASIS</button>
+          <button data-b="latest" title="Most recent VIX close available now">LATEST VIX</button>
+        </span>
+      </div>
+      <div class="warn">IN-SAMPLE HISTORICAL CONDITIONAL AVERAGES &middot; NOT FORECASTS &middot; NOT INVESTMENT ADVICE &middot; low-margin episodes since 2013: ~4–5, 54 sessions</div>
+      <div class="tablewrap"><table id="mtable"></table></div>
+    </section>
+
+    <section class="panel episodes" id="episodes">
+      <div class="ptitle"><span class="pt">EPISODES · M &lt; 145%</span><span class="pc">2004→</span></div>
+      <div class="tablewrap"><table id="etable"></table></div>
+    </section>
+
+    <section class="panel forward" id="forward">
+      <div class="ptitle"><span class="pt">FORWARD SIGNAL LOG</span><span class="pc">POST 2026-11-12</span></div>
+      <div class="tablewrap"><table id="ftable"></table></div>
+    </section>
+
+  </main>
+
+  <footer class="foot" id="foot"></footer>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
