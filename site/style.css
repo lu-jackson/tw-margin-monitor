@@ -201,3 +201,17 @@ table.hm tr:hover td{background:revert-layer}
 .sum-r li b.dn{color:var(--dn)}.sum-r li b.am{color:var(--amber)}
 @media (max-width:1180px){.sum{grid-template-columns:1fr}}
 @media (max-width:560px){table.hm th.rl i{display:none}table.hm td{font-size:12.5px}}
+
+/* ---- daily brief ---- */
+.brief{background:var(--panel)}
+.brief[hidden]{display:none}
+.brief .ptitle{gap:10px}
+.btag{padding:0 7px;border:1px solid var(--line2);color:var(--mute);font-size:9.5px;letter-spacing:.08em;line-height:16px}
+.btag.llm{color:var(--cyan);border-color:#1f6c8c}
+.brief-body{padding:9px 14px 11px;display:grid;grid-template-columns:minmax(220px,300px) 1fr;gap:4px 22px;align-items:start}
+.brief-head{font-family:var(--cond);font-size:16px;font-weight:600;line-height:1.35;color:var(--txt)}
+.brief-body ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:4px 22px;font-family:var(--cond);font-size:13px;line-height:1.5;color:#c3cbd4}
+.brief-body li{padding-left:12px;position:relative}
+.brief-body li::before{content:"";position:absolute;left:0;top:.62em;width:5px;height:5px;background:var(--amber-dim)}
+.brief-foot{grid-column:1 / -1;color:var(--faint);font-size:11px;font-family:var(--cond)}
+@media (max-width:1180px){.brief-body{grid-template-columns:1fr}.brief-body ul{grid-template-columns:1fr}}

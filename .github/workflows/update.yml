@@ -1,13 +1,24 @@
 name: update-and-deploy
 
-# Idempotent: every run fetches only what is new, commits only if something changed,
-# and redeploys the static site only when data changed (or on manual / push triggers).
+# Idempotent: every run fetches only what is new, writes the daily brief when the data date changed,
+# commits only if something changed, and redeploys the static site only when data changed.
 # TWSE publishes margin data in the evening (Taipei); CBOE VIX closes ~05:15–06:15 Taipei next morning.
+# Cost: nothing. GitHub Actions on a public repo is free; the AI writer uses GitHub Models with the
+# workflow's own token (no API key, no billing). Failures open a GitHub issue (-> e-mail / mobile push).
 on:
   schedule:
     - cron: "*/10 13-16 * * 1-5"   # 21:00–00:50 Taipei: poll for TWSE margin + prices
     - cron: "*/30 21-23 * * 1-5"   # 05:00–07:50 Taipei (Tue–Sat): poll for the previous US session's VIX close
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      simulate_failure:
+        description: "Force a failure to test the failure notification"
+        type: boolean
+        default: false
+      force_brief:
+        description: "Regenerate the daily brief even if the data date is unchanged"
+        type: boolean
+        default: false
   push:
     branches: [main]
     paths: ["site/**", ".github/workflows/update.yml"]
@@ -16,6 +27,8 @@ permissions:
   contents: write
   pages: write
   id-token: write
+  models: read
+  issues: write
 
 concurrency:
   group: update-data
@@ -34,16 +47,29 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements.txt
-      - run: python tests/test_compute.py
+      - run: python tests/test_compute.py && python tests/test_brief.py
       - name: Probe source reachability (manual runs only)
         if: github.event_name == 'workflow_dispatch'
         run: |
           curl -sS -m 40 -o /dev/null -w "TWSE MI_MARGN http=%{http_code} bytes=%{size_download}\n" "https://www.twse.com.tw/rwd/zh/marginTrading/MI_MARGN?date=20261120&selectType=ALL&response=json" || echo "TWSE UNREACHABLE"
-          curl -sS -m 40 -o /dev/null -w "TWSE MI_INDEX http=%{http_code} bytes=%{size_download}\n" "https://www.twse.com.tw/rwd/zh/afterTrading/MI_INDEX?date=20261120&type=ALLBUT0999&response=json" || echo "TWSE UNREACHABLE"
           curl -sS -m 40 -o /dev/null -w "CBOE http=%{http_code} bytes=%{size_download}\n" "https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv" || echo "CBOE UNREACHABLE"
-      - name: Fetch new data and rebuild
+      - name: Simulated failure (test of the notification path)
+        if: github.event_name == 'workflow_dispatch' && inputs.simulate_failure
+        run: echo "Simulated failure requested"; exit 1
+      - name: Fetch new data and rebuild (one retry)
         if: github.event_name != 'push'
-        run: python pipeline/update.py
+        run: |
+          for i in 1 2; do
+            python pipeline/update.py && exit 0
+            echo "attempt $i failed"; sleep 60
+          done
+          exit 1
+      - name: Daily brief (AI writer with verification; never blocks the update)
+        if: github.event_name != 'push'
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python pipeline/brief.py ${{ inputs.force_brief && '--force' || '' }}
       - name: Commit if changed
         id: commit
         run: |
@@ -75,3 +101,43 @@ jobs:
         run: sleep 20
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  notify-failure:
+    needs: [update, deploy]
+    if: always() && (needs.update.result == 'failure' || needs.deploy.result == 'failure')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open one issue per outage (GitHub e-mails / pushes it to you)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh label create pipeline-failure --repo "$REPO" --color B60205 --description "Data pipeline failed" 2>/dev/null || true
+          n=$(gh issue list --repo "$REPO" --label pipeline-failure --state open --json number --jq length)
+          if [ "$n" = "0" ]; then
+            gh issue create --repo "$REPO" --label pipeline-failure \
+              --title "⚠️ Data pipeline failed ($(date -u +%Y-%m-%d\ %H:%M) UTC)" \
+              --body "The scheduled update failed after one automatic retry.
+
+          - Run: $RUN_URL
+          - Event: ${{ github.event_name }}
+          - Dashboard data may be stale until the next successful run. This issue closes itself when a run succeeds."
+          else
+            echo "an outage issue is already open; not creating another"
+          fi
+
+  recover:
+    needs: [update, deploy]
+    if: always() && needs.update.result == 'success' && needs.deploy.result != 'failure' && github.event_name != 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close outage issues after a successful run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          for n in $(gh issue list --repo "$REPO" --label pipeline-failure --state open --json number --jq '.[].number'); do
+            gh issue close "$n" --repo "$REPO" --comment "Recovered: a later run succeeded ($RUN_URL)."
+          done

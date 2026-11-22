@@ -1,0 +1,47 @@
+name: stale-data-watchdog
+
+# Catches the failure the update workflow cannot see about itself: the schedule silently not running
+# (GitHub pauses cron on inactive repos) or a source quietly changing. Free; one tiny job a day.
+on:
+  schedule:
+    - cron: "30 0 * * *"   # 08:30 Taipei, every day
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare latest data dates with today (Taipei)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          python - <<'PY' > stale.txt
+          import json, datetime as dt
+          d = json.load(open("site/data/latest.json", encoding="utf-8"))
+          today = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=8)).date()
+          age = lambda s: (today - dt.date.fromisoformat(s)).days
+          a, b = age(d["tw_date"]), age(d["vix_date_latest"])
+          # 5 days covers weekends and normal holidays; Lunar New Year closures can exceed it (false alarm is acceptable)
+          if a > 5 or b > 5:
+              print(f"TWSE margin data is {a} days old ({d['tw_date']}); VIX data is {b} days old ({d['vix_date_latest']}).")
+          PY
+          gh label create data-stale --repo "$REPO" --color D93F0B --description "Dashboard data is stale" 2>/dev/null || true
+          open=$(gh issue list --repo "$REPO" --label data-stale --state open --json number --jq length)
+          if [ -s stale.txt ]; then
+            if [ "$open" = "0" ]; then
+              gh issue create --repo "$REPO" --label data-stale --title "⏰ Dashboard data is stale" \
+                --body "$(cat stale.txt)
+
+          The update schedule may have stopped. Check https://github.com/$REPO/actions and re-run \`update-and-deploy\` (workflow_dispatch). Closes itself when data is fresh again."
+            fi
+          else
+            for n in $(gh issue list --repo "$REPO" --label data-stale --state open --json number --jq '.[].number'); do
+              gh issue close "$n" --repo "$REPO" --comment "Data is fresh again."
+            done
+          fi
