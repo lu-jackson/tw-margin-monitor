@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paper &amp; Guide · TW Margin Monitor</title>
+<meta name="description" content="Research paper and a step-by-step guide to reading the TW Margin Monitor dashboard.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans+Condensed:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="guide.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="cmdbar">
+    <div class="brand"><span class="brand-box">TWM</span><span class="brand-name">PAPER &amp; GUIDE</span><span class="brand-sub">研究論文 · 儀表板教學</span></div>
+    <nav class="tools" aria-label="Page tools" style="margin-left:auto">
+      <a class="tbtn" href="./" title="Back to the live dashboard"><span class="ico">◂</span><span class="lab">DASHBOARD<i>回儀表板</i></span></a>
+      <button class="tbtn" id="fsBtn" type="button" aria-pressed="false" title="Enter fullscreen (F)"><span class="ico">⤢</span><span class="lab">FULLSCREEN</span></button>
+    </nav>
+  </header>
+
+  <div class="gwrap">
+    <nav class="toc panel" aria-label="Contents">
+      <div class="ptitle"><span class="pt">CONTENTS</span></div>
+      <ol>
+        <li><a href="#paper">研究論文</a></li>
+        <li><a href="#quick">30 秒看懂</a></li>
+        <li><a href="#fresh">1 · 資料新鮮度</a></li>
+        <li><a href="#strip">2 · 頂部八格讀數</a></li>
+        <li><a href="#charts">3 · 三格圖表</a></li>
+        <li><a href="#side">4 · 參考線與原始資料</a></li>
+        <li><a href="#matrix">5 · 方程式矩陣</a></li>
+        <li><a href="#logs">6 · 事件表與前瞻紀錄</a></li>
+        <li><a href="#example">7 · 用今天的數字走一遍</a></li>
+        <li><a href="#pitfalls">8 · 常見誤讀</a></li>
+        <li><a href="#sched">9 · 更新時程</a></li>
+        <li><a href="#gloss">10 · 名詞表</a></li>
+      </ol>
+    </nav>
+
+    <main class="gmain">
+
+      <!-- ============ PAPER ============ -->
+      <section class="panel" id="paper">
+        <div class="ptitle"><span class="pt">RESEARCH PAPER · 研究論文</span><span class="pc">PDF · 8 PAGES</span></div>
+        <div class="gbody">
+          <h2>台股融資維持率、恐慌指數與正二加碼時點（科普研究報告）</h2>
+          <p class="lead">這份報告是儀表板背後的研究：把「上市融資維持率低不低」與「恐慌指數高不高」當成觀察時點的工具，檢驗它們與之後 2 倍槓桿報酬的關係。儀表板上的每一條方程式，都來自報告的第 5、6 節。</p>
+          <div class="btnrow">
+            <a class="gbtn primary" href="docs/TW_Margin_Shock_Popular_Report.pdf" target="_blank" rel="noopener">開啟論文 PDF ↗</a>
+            <a class="gbtn" href="docs/TW_Margin_Shock_Popular_Report.pdf" download>下載</a>
+          </div>
+          <div class="meta">版本：2026-11-15（研究階段 0–9）· 研究資料截至 2025-12-31 · 2026 年資料為封存測試與前瞻追蹤，不在方程式估計內</div>
+          <h3>報告章節</h3>
+          <ol class="plain">
+            <li>先認識主角：融資維持率是什麼？想像借錢買房的抵押品</li>
+            <li>我怎麼做研究？用白話說明</li>
+            <li>照 150%／170% 進出，會比一直持有賺嗎？</li>
+            <li>「150% 附近買都賺錢」是真的嗎？</li>
+            <li>維持率只在極端區間才有用嗎？</li>
+            <li>把恐慌指數放進來：只用近期資料之後呢？</li>
+            <li>不同期間、不同時間尺度，要用哪一條方程式？<span class="tag">儀表板方程式矩陣來源</span></li>
+            <li>實作教學：分數怎麼算？一步一步照做</li>
+            <li>那個只能打開一次的密封考卷：2026 年</li>
+            <li>這些結果說了什麼、沒說什麼</li>
+            <li>可能被問的問題</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- ============ QUICK ============ -->
+      <section class="panel" id="quick">
+        <div class="ptitle"><span class="pt">30-SECOND READ · 30 秒看懂</span></div>
+        <div class="gbody">
+          <div class="cards">
+            <div class="card"><b>1 · 看 M</b><p>左上大數字是上市融資維持率。<span class="dn">低於 145%</span> 時方塊變紅、旗標亮起（ACTIVE）。</p></div>
+            <div class="card"><b>2 · 看 zV</b><p>VIX 比自己過去 5 年「平常」高出幾個標準差。越正代表越恐慌；<span class="am">ELEVATED</span> 表示進到過去 5 年最高的 20%。</p></div>
+            <div class="card"><b>3 · 看矩陣</b><p>下方表格把兩個讀數代進研究方程式，<b>NOW (pp)</b> 是「歷史上這種情況之後，2 倍多單平均多賺／少賺幾個百分點」。</p></div>
+            <div class="card"><b>4 · 看限制</b><p>全部是<span class="am">樣本內歷史平均</span>，不是預測。事件很少（2013 年後低維持率只有約 4–5 段）。</p></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 1 FRESH ============ -->
+      <section class="panel" id="fresh">
+        <div class="ptitle"><span class="pt">1 · DATA FRESHNESS · 資料新鮮度</span></div>
+        <div class="gbody">
+          <p>最上方列右側有兩顆指示燈與 BUILD 時間：</p>
+          <table class="gt">
+            <tr><th>項目</th><th>意思</th></tr>
+            <tr><td><b>TWSE MARGIN</b> 日期</td><td>最新一個已公布融資資料的台股交易日。證交所<b>晚上</b>公布，所以白天看到的通常是前一個交易日。</td></tr>
+            <tr><td><b>CBOE VIX</b> 日期</td><td>最新一個美股交易日的 VIX 收盤。美股收盤是台北隔天清晨，所以週一早上看到的是週五的收盤。</td></tr>
+            <tr><td><b>BUILD</b></td><td>網站資料最後一次重建的 UTC 時間。</td></tr>
+            <tr><td>燈號</td><td><span class="up">綠</span>：資料日期距今 ≤ 4 天（含週末與一般連假）；<span class="am">橘</span>：5–7 天；<span class="dn">紅</span>：超過 7 天，代表自動更新可能出問題，數字不要信。</td></tr>
+          </table>
+          <p class="note">右上角的 TPE / NYC 是台北與紐約的即時時鐘，方便對照兩地開收盤時間。</p>
+        </div>
+      </section>
+
+      <!-- ============ 2 STRIP ============ -->
+      <section class="panel" id="strip">
+        <div class="ptitle"><span class="pt">2 · STATUS STRIP · 頂部八格讀數</span></div>
+        <div class="gbody">
+          <table class="gt">
+            <tr><th style="width:190px">格子</th><th>怎麼讀</th></tr>
+            <tr><td><b>MARGIN RATIO</b><br><span class="mu">上市融資維持率</span></td><td>M＝上市證券融資擔保品總市值 ÷ 融資金額。下方三個數字是 1 日、5 日、20 日的<b>點數</b>變化（不是百分比）。<span class="dn">低於 145 整格轉紅框</span>。</td></tr>
+            <tr><td><b>zM</b></td><td>M 相對過去約 5 年（1,260 個交易日）平均的標準差倍數。−2 以下表示比過去 5 年「平常」低得很極端。</td></tr>
+            <tr><td><b>LOW-MARGIN FLAG</b></td><td>[M&lt;145]。ACTIVE＝目前 M 低於 145%，方程式裡的低維持率項會被「打開」；下方顯示本次已連續幾個交易日。</td></tr>
+            <tr><td><b>VIX CLOSE</b></td><td>最新一個美股交易日的 VIX 收盤與 1／5／20 日變化。</td></tr>
+            <tr><td><b>zV · RESEARCH</b></td><td>研究的嚴格定義：用台股日期<b>之前</b>最後一個美股交易日的 VIX（T−1）。這是研究估計方程式時用的口徑。</td></tr>
+            <tr><td><b>zV · LATEST</b></td><td>用「現在手上最新的」VIX 收盤。它在下一個台股開盤前就已經知道，所以更即時，但比研究的口徑多用了一天的資訊。</td></tr>
+            <tr><td><b>VIX P80 SIGNAL</b></td><td>zV 是否達到過去 5 年 zV 的第 80 百分位。ELEVATED＝是；NORMAL＝否。下方顯示目前 zV 與門檻。</td></tr>
+            <tr><td><b>VIX 52W RANGE</b></td><td>近 52 週 VIX 最低到最高；<b>5Y pctile／all</b> 是目前 VIX 在過去 5 年與全部歷史中的百分位（99＝比 99% 的日子都高）。</td></tr>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============ 3 CHARTS ============ -->
+      <section class="panel" id="charts">
+        <div class="ptitle"><span class="pt">3 · CHARTS · 三格圖表</span></div>
+        <div class="gbody">
+          <ul class="plain">
+            <li><b>範圍按鈕</b> 1M 到 MAX 切換時間長度；三格圖共用同一條時間軸。</li>
+            <li><b>十字線</b> 滑鼠（或手指）移到任一格，三格同步顯示同一天的數值，圖左上角的讀數會跟著變。</li>
+            <li><b>第一格 · 維持率：</b>白線是 M；紅色虛線 145、橘色虛線 150／170、青色虛線 205／210 是研究原始規則的參考線；145 以下的區域有淡紅底色。</li>
+            <li><b>第二格 · VIX：</b>短範圍顯示 K 線（綠＝收高於開、紅＝收低於開），長範圍改成收盤線；20、30 是常用的情緒刻度。</li>
+            <li><b>第三格 · 標準化：</b>青線 zV、橘線 zM。兩條線同時往上衝或往下掉，代表兩種壓力同時出現。0 是 5 年平均，±2 是兩個標準差。</li>
+            <li><b>右側價格標籤</b> 是最新值。</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ============ 4 SIDE ============ -->
+      <section class="panel" id="side">
+        <div class="ptitle"><span class="pt">4 · REFERENCE LEVELS &amp; RAW DATA · 參考線與原始資料</span></div>
+        <div class="gbody">
+          <h3>MARGIN RATIO vs REFERENCE LEVELS</h3>
+          <p>橫條是 115%–225% 的刻度，白色標籤是目前的 M。底下列出離 145／150／170／205／210 各差幾點（綠＝高於、紅＝低於）。這些水位是研究的原始規則門檻，只當對照用，<b>儀表板不會告訴你該買或該賣</b>。</p>
+          <h3>RAW SOURCE DATA · 原始資料</h3>
+          <table class="gt">
+            <tr><th style="width:230px">欄位</th><th>來源與意思</th></tr>
+            <tr><td>Margin ratio M</td><td>用證交所原始資料自己算，三位小數。不是愛玩股的頁面，也不是證交所自己公布的「整戶擔保維持率」（那是另一個口徑）。</td></tr>
+            <tr><td>Margin balance (lots)</td><td>融資餘額，張（1 張 ＝ 1,000 股）。證交所 MI_MARGN「今日餘額」。</td></tr>
+            <tr><td>Margin amount (NT$ k)</td><td>融資金額，仟元。</td></tr>
+            <tr><td>Collateral mkt value</td><td>擔保品市值 ＝ 各證券融資餘額 × 1,000 × 收盤價 的總和，單位億元。M ＝ 它 ÷ 融資金額。</td></tr>
+            <tr><td>Securities w/ balance</td><td>有融資餘額的證券檔數（含上市 ETF）。</td></tr>
+            <tr><td>No close today → last close</td><td>當天沒有成交價（停牌等）的檔數，改用最近一次收盤價；後面是它們占擔保品市值的比例，通常遠小於 1%，越小越可信。</td></tr>
+            <tr><td>CBOE · VIX_History</td><td>VIX 開高低收、前收、ln(VIX)，以及過去 5 年 ln(VIX) 的平均與標準差（zV 就是用它們標準化）。</td></tr>
+            <tr><td>RESEARCH BASIS · T−1</td><td>研究口徑所用的那一天 VIX、zV 與 P80 門檻。</td></tr>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============ 5 MATRIX ============ -->
+      <section class="panel" id="matrix">
+        <div class="ptitle"><span class="pt">5 · EQUATION MATRIX · 方程式矩陣</span></div>
+        <div class="gbody">
+          <p>每一列是「某個研究期間 × 某個持有天數」的一條方程式，估計的是 <b>2 倍多單</b>在之後 H 個交易日的<b>額外報酬</b>（相對平常，單位：百分點 pp）：</p>
+          <pre class="eq">額外報酬 (pp) ＝ b · zV  ＋  c · [M&lt;145]</pre>
+          <table class="gt">
+            <tr><th style="width:190px">欄位</th><th>怎麼讀</th></tr>
+            <tr><td>ID / WINDOW / HORIZON</td><td>例：P13-60 ＝ 2013 年後資料、看之後 60 個交易日。FULL＝2009–2025、P18＝2018 年後、L5＝最近 5 年。</td></tr>
+            <tr><td>EQUATION</td><td>該情境「有效」的項。只放 90% 區間不含 0、且前後半同方向的項。</td></tr>
+            <tr><td>VIX TERM</td><td>左邊是此刻這一項的貢獻（＝ b × 目前 zV），右邊小圖：<b>灰條＝90% 區間，金色短棒＝點估計，細直線＝0</b>。<span class="mu">n.s.</span>＝不顯著，已隱藏。</td></tr>
+            <tr><td>LOW-MARGIN TERM</td><td>同上，但乘的是旗標 [M&lt;145]（0 或 1）。旗標未亮時貢獻為 0。</td></tr>
+            <tr><td><b>NOW (pp)</b></td><td>兩項加總。綠＝歷史上這種讀數之後平均多賺，紅＝平均少賺。</td></tr>
+            <tr><td>N · INDEP · LOW DAYS</td><td>樣本日數 · <b>獨立窗口數</b>（重疊的觀察合併後真正獨立的段數）· 低維持率的天數。獨立窗口越少，結論越不穩，一年期只有約 12 個。</td></tr>
+            <tr><td>EARLY 列</td><td>2009–2012 沒有任何穩定訊號，所以是 0。</td></tr>
+            <tr><td>紅底整列</td><td>低維持率旗標亮著，而且該列含低維持率項。</td></tr>
+          </table>
+          <h3>RESEARCH BASIS vs LATEST VIX</h3>
+          <p>右上角的切換鈕決定 zV 用哪一天的 VIX：<b>RESEARCH BASIS</b> 是研究估計時的嚴格口徑（T−1，建議預設看這個）；<b>LATEST VIX</b> 用最新收盤，VIX 剛大幅跳動時兩者會差很多。維持率那一項兩邊相同。</p>
+        </div>
+      </section>
+
+      <!-- ============ 6 LOGS ============ -->
+      <section class="panel" id="logs">
+        <div class="ptitle"><span class="pt">6 · EPISODES &amp; FORWARD LOG · 事件表與前瞻紀錄</span></div>
+        <div class="gbody">
+          <ul class="plain">
+            <li><b>EPISODES · M&lt;145%：</b>2004 年起每一段 M 跌破 145 的時期（中間隔 5 個交易日內視為同一段）。顯示起訖日、天數、最低 M 與最低點日期；<span class="pill on" style="font-size:9px;padding:0 5px">LIVE</span> 表示目前仍在該段中。</li>
+            <li><b>FORWARD SIGNAL LOG：</b>研究凍結（2026-11-12）之後的逐日紀錄：M、zM、旗標與寫入時間（UTC）。這是真正的前瞻檢驗。最早 11/13–11/20 的 6 筆是補登的，之後的紀錄由自動更新當天寫入，時間戳可在 GitHub 提交紀錄核對。</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ============ 7 EXAMPLE ============ -->
+      <section class="panel" id="example">
+        <div class="ptitle"><span class="pt">7 · WORKED EXAMPLE · 用今天的數字走一遍</span><span class="pc" id="exDate">LIVE</span></div>
+        <div class="gbody" id="exBody"><p class="mu">載入即時數字中…（需要透過網址開啟本頁，不能直接用檔案開啟）</p></div>
+      </section>
+
+      <!-- ============ 8 PITFALLS ============ -->
+      <section class="panel" id="pitfalls">
+        <div class="ptitle"><span class="pt">8 · COMMON MISREADINGS · 常見誤讀</span></div>
+        <div class="gbody">
+          <ol class="plain">
+            <li><b>「NOW 欄顯示 +20 pp，就是會多賺 20%」</b>——不是。那是樣本內、歷史上滿足條件的那幾段平均多賺的幅度，區間很寬，下一段可以完全不同。</li>
+            <li><b>「事件很少所以更準」</b>——相反。2013 年後 M&lt;145 只有 54 天、約 4–5 段，數字很大主要來自 2020 年那一波反彈；一年期窗口只有約 12 個獨立樣本。</li>
+            <li><b>「zV 越極端越好」</b>——方程式對 zV 是線性的，zV 很大（例如 &gt; 3）時已經是外推，不要照字面放大。</li>
+            <li><b>「最近 5 年 VIX 也有效」</b>——不是。最近 5 年 VIX 項已經鈍化（區間含 0），所以 L5 列只有低維持率項。</li>
+            <li><b>「報酬已含費用」</b>——沒有。研究用 2 倍模擬序列，不含股利、管理費與每日重設耗損；真實 00685L 另有差異。</li>
+            <li><b>「這是買賣訊號」</b>——不是。儀表板只呈現研究結果與當前讀數，不提供個人化投資建議。</li>
+            <li><b>與愛玩股數字對不上</b>——本站用證交所原始資料自己重算（沿用當晚先公布的餘額），與第三方網站的算法與時點可能略有差異，且尚未與愛玩股比對。</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- ============ 9 SCHEDULE ============ -->
+      <section class="panel" id="sched">
+        <div class="ptitle"><span class="pt">9 · UPDATE SCHEDULE · 更新時程</span></div>
+        <div class="gbody">
+          <table class="gt">
+            <tr><th>資料</th><th>來源公布時間（台北）</th><th>自動檢查</th></tr>
+            <tr><td>融資餘額與金額、收盤價</td><td>平日晚上（證交所 MI_MARGN／MI_INDEX）</td><td>平日 21:00–00:50，每 10 分鐘</td></tr>
+            <tr><td>VIX 收盤</td><td>美股收盤後，台北隔天清晨約 05:15–06:15（夏令時間早一小時）</td><td>週二至週六 05:00–07:50，每 30 分鐘</td></tr>
+          </table>
+          <p class="note">資料一公布，自動程式抓取、重算並重新部署；通常數分鐘內反映到網站，但 GitHub 的排程可能延遲或偶爾漏跑。以最上方列的資料日期為準。</p>
+        </div>
+      </section>
+
+      <!-- ============ 10 GLOSSARY ============ -->
+      <section class="panel" id="gloss">
+        <div class="ptitle"><span class="pt">10 · GLOSSARY · 名詞表</span></div>
+        <div class="gbody">
+          <table class="gt">
+            <tr><th style="width:170px">名詞</th><th>定義</th></tr>
+            <tr><td><b>M</b></td><td>上市融資維持率 ＝ 融資擔保品市值 ÷ 融資金額 × 100%。</td></tr>
+            <tr><td><b>zM</b></td><td>(M − 前 1,260 個交易日平均) ÷ 該期標準差，不含當天。</td></tr>
+            <tr><td><b>zV</b></td><td>用 ln(VIX) 同樣方式標準化，窗口是前 1,260 個美股交易日。</td></tr>
+            <tr><td><b>[M&lt;145]</b></td><td>旗標；M 小於 145 為 1，否則為 0。</td></tr>
+            <tr><td><b>P80</b></td><td>前 1,260 個每日 zV 的第 80 百分位，zV ≥ P80 即 VIX 加碼訊號亮起。</td></tr>
+            <tr><td><b>pp</b></td><td>百分點。+10 pp ＝ 多 10 個百分點（不是 10%）。</td></tr>
+            <tr><td><b>90% CI</b></td><td>90% 信賴區間（移動區塊自助法）。區間含 0＝無法排除純屬巧合。</td></tr>
+            <tr><td><b>n.s.</b></td><td>not significant，不顯著，已從方程式移除。</td></tr>
+            <tr><td><b>獨立窗口</b></td><td>把重疊的 H 日觀察合併後，真正彼此獨立的觀察段數。</td></tr>
+            <tr><td><b>T−1</b></td><td>台股日期之前最後一個美股交易日。</td></tr>
+            <tr><td><b>樣本內／前瞻</b></td><td>樣本內＝用來估計方程式的歷史；前瞻＝估計之後才發生、不能被挑選過的新資料。</td></tr>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <footer class="foot">
+    <div><b>NOT INVESTMENT ADVICE</b>本站為研究成果的資料呈現，所有方程式數值是歷史樣本內的條件平均，不構成任何投資建議或預測。</div>
+    <div><b>SOURCES</b>TWSE MI_MARGN / MI_INDEX · CBOE VIX_History.csv</div>
+    <div><b>BACK</b><a href="./" class="lnk">← 回到即時儀表板</a></div>
+  </footer>
+</div>
+<script src="ui.js"></script>
+<script src="guide.js"></script>
+</body>
+</html>
