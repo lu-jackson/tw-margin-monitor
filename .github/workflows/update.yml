@@ -50,7 +50,13 @@ jobs:
       - run: python tests/test_compute.py && python tests/test_brief.py
       - name: Probe source reachability (manual runs only)
         if: github.event_name == 'workflow_dispatch'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
+          echo "--- GitHub Models catalog:"
+          curl -sS -m 40 -D - -o models_probe.txt "https://models.github.ai/catalog/models" -H "Accept: application/vnd.github+json" -H "Authorization: Bearer $GITHUB_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" | head -12; head -c 300 models_probe.txt; echo
+          echo "--- GitHub Models chat (model list may differ):"
+          curl -sS -m 60 -D - -o chat_probe.txt -X POST "https://models.github.ai/inference/chat/completions" -H "Accept: application/vnd.github+json" -H "Authorization: Bearer $GITHUB_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28" -H "Content-Type: application/json" -d '{"model":"openai/gpt-4.1-mini","messages":[{"role":"user","content":"say hi in JSON like {\"a\":1}"}],"max_tokens":20}' | head -12; head -c 400 chat_probe.txt; echo
           curl -sS -m 40 -o /dev/null -w "TWSE MI_MARGN http=%{http_code} bytes=%{size_download}\n" "https://www.twse.com.tw/rwd/zh/marginTrading/MI_MARGN?date=20261120&selectType=ALL&response=json" || echo "TWSE UNREACHABLE"
           curl -sS -m 40 -o /dev/null -w "CBOE http=%{http_code} bytes=%{size_download}\n" "https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv" || echo "CBOE UNREACHABLE"
       - name: Simulated failure (test of the notification path)
