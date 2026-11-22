@@ -111,32 +111,57 @@ def verify(parts, facts):
 
 
 # ------------------------------------------------------------------ writers
-def llm_write(facts, feedback=None):
-    token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
-    if not token:
-        raise RuntimeError("no GITHUB_TOKEN")
-    user = "facts:\n" + json.dumps(facts, ensure_ascii=False)
-    if feedback:
-        user += "\n\n上一版被退回，原因：" + "；".join(feedback) + "。請修正後重寫。"
-    body = json.dumps({"model": MODEL, "temperature": 0.2, "max_tokens": 700,
-                       "messages": [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}]}).encode()
-    req = urllib.request.Request(ENDPOINT, data=body, headers={
-        "Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28", "Content-Type": "application/json"})
+def _post(url, headers, payload):
+    req = urllib.request.Request(url, data=json.dumps(payload).encode(), headers={"Content-Type": "application/json", **headers})
     try:
         with urllib.request.urlopen(req, timeout=90) as r:
             status, raw = r.status, r.read().decode("utf-8", "replace")
     except urllib.error.HTTPError as e:
         raise RuntimeError(f"HTTP {e.code}: {e.read().decode('utf-8', 'replace')[:240]}")
     try:
-        out = json.loads(raw)
+        return json.loads(raw)
     except ValueError:
         raise RuntimeError(f"non-JSON response (HTTP {status}): {raw[:240]!r}")
-    txt = out["choices"][0]["message"]["content"].strip()
-    txt = re.sub(r"^```(?:json)?|```$", "", txt, flags=re.M).strip()
+
+
+def _parse(txt):
+    txt = re.sub(r"^```(?:json)?|```$", "", txt.strip(), flags=re.M).strip()
     d = json.loads(txt)
     assert isinstance(d.get("headline"), str) and isinstance(d.get("bullets"), list) and 2 <= len(d["bullets"]) <= 6
     return {"headline": d["headline"].strip(), "bullets": [str(b).strip() for b in d["bullets"]]}
+
+
+def provider():
+    """Gemini (free tier, needs GEMINI_API_KEY secret) > GitHub Models (free, workflow token) > none."""
+    if os.environ.get("GEMINI_API_KEY"):
+        return "gemini", os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+    if os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN"):
+        return "github", MODEL
+    return None, None
+
+
+def llm_write(facts, feedback=None):
+    kind, model = provider()
+    if kind is None:
+        raise RuntimeError("no LLM credentials in the environment")
+    user = "facts:\n" + json.dumps(facts, ensure_ascii=False)
+    if feedback:
+        user += "\n\n上一版被退回，原因：" + "；".join(feedback) + "。請修正後重寫。"
+    if kind == "gemini":
+        out = _post(f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+                    {"x-goog-api-key": os.environ["GEMINI_API_KEY"]},
+                    {"systemInstruction": {"parts": [{"text": SYSTEM}]},
+                     "contents": [{"role": "user", "parts": [{"text": user}]}],
+                     "generationConfig": {"temperature": 0.2, "maxOutputTokens": 2000, "responseMimeType": "application/json",
+                                          "thinkingConfig": {"thinkingBudget": 0}}})
+        txt = out["candidates"][0]["content"]["parts"][0]["text"]
+    else:
+        token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+        out = _post(ENDPOINT, {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"},
+                    {"model": model, "temperature": 0.2, "max_tokens": 700,
+                     "messages": [{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}]})
+        txt = out["choices"][0]["message"]["content"]
+    return _parse(txt), model
 
 
 def template_write(facts):
@@ -169,10 +194,10 @@ def main():
         feedback = None
         for attempt in (1, 2):
             try:
-                cand = llm_write(facts, feedback)
+                cand, used_model = llm_write(facts, feedback)
                 problems = verify(cand["headline"] + "\n" + "\n".join(cand["bullets"]), facts)
                 if not problems:
-                    text, source, model = cand, "llm", MODEL
+                    text, source, model = cand, "llm", used_model
                     break
                 feedback = problems
                 print(f"attempt {attempt} rejected:", problems)

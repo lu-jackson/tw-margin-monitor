@@ -38,6 +38,20 @@ def test_facts_contain_no_none_ranges_when_low_margin():
     assert all(r[k] is not None for k in ("20D", "60D", "120-250D"))
 
 
+def test_gemini_path_parses_response(monkeypatch=None):
+    os_env = dict(os.environ)
+    os.environ["GEMINI_API_KEY"] = "dummy"
+    orig = B._post
+    fake = "```json" + chr(10) + '{"headline": "測試", "bullets": ["a", "b", "c"]}' + chr(10) + "```"
+    B._post = lambda url, headers, payload: {"candidates": [{"content": {"parts": [{"text": fake}]}}]}
+    try:
+        d, model = B.llm_write(FACTS)
+    finally:
+        B._post = orig
+        os.environ.clear(); os.environ.update(os_env)
+    assert d["headline"] == "測試" and len(d["bullets"]) == 3 and model.startswith("gemini")
+
+
 if __name__ == "__main__":
     for k, fn in list(globals().items()):
         if k.startswith("test_"):
