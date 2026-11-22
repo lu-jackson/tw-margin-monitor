@@ -2,7 +2,7 @@
  "key": "2026-11-20|2026-11-20",
  "tw_date": "2026-11-20",
  "vix_date": "2026-11-20",
- "generated_utc": "2026-11-22T10:49:45+00:00",
+ "generated_utc": "2026-11-22T10:53:00+00:00",
  "source": "template",
  "model": null,
  "headline": "雙重壓力：低維持率與 VIX 偏高同時出現",
@@ -13,5 +13,5 @@
   "可信度有限：2013 年後低維持率事件約 4–5 段，一年期約 12 個獨立窗口，數字多來自 2020 年反彈。"
  ],
  "disclaimer": "樣本內歷史條件平均，非預測、非投資建議。",
- "note": null
+ "note": "JSONDecodeError: Expecting value: line 1 column 1 (char 0)"
 }
