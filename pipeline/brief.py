@@ -115,10 +115,12 @@ def verify(parts, facts):
 def _post(url, headers, payload):
     req = urllib.request.Request(url, data=json.dumps(payload).encode(), headers={"Content-Type": "application/json", **headers})
     try:
-        with urllib.request.urlopen(req, timeout=90) as r:
+        with urllib.request.urlopen(req, timeout=45) as r:
             status, raw = r.status, r.read().decode("utf-8", "replace")
     except urllib.error.HTTPError as e:
         raise RuntimeError(f"HTTP {e.code}: {e.read().decode('utf-8', 'replace')[:240]}")
+    except (TimeoutError, urllib.error.URLError) as e:
+        raise RuntimeError(f"HTTP 503 network/timeout: {e!r}"[:200])
     try:
         return json.loads(raw)
     except ValueError:
@@ -135,7 +137,7 @@ def _parse(txt):
 def provider():
     """Gemini (free tier, needs GEMINI_API_KEY secret) > GitHub Models (free, workflow token) > none."""
     if os.environ.get("GEMINI_API_KEY"):
-        return "gemini", os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
+        return "gemini", os.environ.get("GEMINI_MODEL", "gemini-flash-lite-latest")
     if os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN"):
         return "github", MODEL
     return None, None
@@ -158,9 +160,8 @@ RETRYABLE = ("HTTP 404", "HTTP 429", "HTTP 500", "HTTP 503")
 def _gemini_try(preferred, user):
     """Try the preferred model, then the 'flash-latest' alias, then discovered Flash models (newest first).
     Models get retired ("no longer available to new users") or are briefly overloaded (503); both fall through."""
-    tried, queue = [], [preferred]
-    if "gemini-flash-latest" not in queue:
-        queue.append("gemini-flash-latest")
+    # Lite/older Flash models first: this task is a short JSON rewrite, and the newest models are the ones that get overloaded.
+    tried, queue = [], [preferred, "gemini-flash-lite-latest", "gemini-3.5-flash", "gemini-flash-latest"]
     discovered = False
     while queue:
         m = queue.pop(0)
