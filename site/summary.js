@@ -16,16 +16,16 @@
     const low = M.L145 === 1, elev = V.signal;
     const horizonOf = Object.fromEntries(L.scenario_meta.scenarios.map(s => [s.id, s.horizon]));
     const by = h => ev.filter(e => h.includes(horizonOf[e.id])).map(e => e.total_pp);
-    const cells = [{ k: "20 日", v: by([20]) }, { k: "60 日", v: by([60]) }, { k: "120–250 日", v: by([120, 250]) }];
+    const cells = [{ k: "20D", v: by([20]) }, { k: "60D", v: by([60]) }, { k: "120–250D", v: by([120, 250]) }];
     const active = cells.some(c => c.v.some(x => x !== 0));
 
     let tone, title, sub;
-    if (low && elev) { tone = "dn"; title = "雙重壓力"; sub = "低維持率 ＋ VIX 偏高"; }
-    else if (low) { tone = "dn"; title = "低維持率"; sub = "維持率已低於 145%"; }
-    else if (elev) { tone = "am"; title = "VIX 偏高"; sub = "恐慌升溫，維持率尚在 145% 之上"; }
-    else { tone = "mu"; title = "中性"; sub = "兩項訊號都沒啟動"; }
+    if (low && elev) { tone = "dn"; title = "DUAL STRESS"; sub = "Low margin + elevated VIX"; }
+    else if (low) { tone = "dn"; title = "LOW MARGIN"; sub = "Margin ratio below 145%"; }
+    else if (elev) { tone = "am"; title = "ELEVATED VIX"; sub = "Fear rising; margin ratio still above 145%"; }
+    else { tone = "mu"; title = "NEUTRAL"; sub = "No signal active"; }
 
-    const facts = `維持率 <b>${f(M.M, 1)}%</b>${low ? "（&lt;145）" : ""} · VIX <b>${f(V.close, 1)}</b>（zV ${sg(V.zV)}）`;
+    const facts = `Margin <b>${f(M.M, 1)}%</b>${low ? " (&lt;145)" : ""} · VIX <b>${f(V.close, 1)}</b> (zV ${sg(V.zV)})`;
     const stat = c => {
       const t = rng(c.v);
       const pos = c.v.length && Math.min(...c.v) >= 0;
@@ -34,8 +34,8 @@
 
     host.innerHTML =
       `<div class="s-verdict"><div class="s-title ${tone}">${title}</div><div class="s-sub">${sub}</div><div class="s-facts">${facts}</div></div>` +
-      `<div class="s-stats"><div class="s-cap">${active ? "歷史上類似讀數之後，2× 多單平均比平常多賺" : "目前沒有啟動的訊號，方程式輸出為 0"}</div><div class="s-row">${active ? cells.map(stat).join("") : ""}</div></div>` +
-      `<div class="s-note"><b>樣本內歷史平均</b>，不是預測<br>低維持率事件僅約 4–5 段<br><span>VIX 口徑：${b === "research" ? "研究（T−1）" : "最新收盤"}</span></div>`;
+      `<div class="s-stats"><div class="s-cap">${active ? "After similar readings in the past, 2× long earned on average vs. normal" : "No signal active — equation outputs are 0"}</div><div class="s-row">${active ? cells.map(stat).join("") : ""}</div></div>` +
+      `<div class="s-note"><div><b>In-sample historical average</b>, not a forecast</div><div>Low-margin episodes: only ~4–5</div><div><span>VIX basis: ${b === "research" ? "Research (T−1)" : "Latest close"}</span></div></div>`;
   }
 
   fetch("data/latest.json", { cache: "no-store" }).then(r => r.json()).then(d => {
