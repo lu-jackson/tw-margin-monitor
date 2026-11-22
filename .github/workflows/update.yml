@@ -35,6 +35,12 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt
       - run: python tests/test_compute.py
+      - name: Probe source reachability (manual runs only)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          curl -sS -m 40 -o /dev/null -w "TWSE MI_MARGN http=%{http_code} bytes=%{size_download}\n" "https://www.twse.com.tw/rwd/zh/marginTrading/MI_MARGN?date=20261120&selectType=ALL&response=json" || echo "TWSE UNREACHABLE"
+          curl -sS -m 40 -o /dev/null -w "TWSE MI_INDEX http=%{http_code} bytes=%{size_download}\n" "https://www.twse.com.tw/rwd/zh/afterTrading/MI_INDEX?date=20261120&type=ALLBUT0999&response=json" || echo "TWSE UNREACHABLE"
+          curl -sS -m 40 -o /dev/null -w "CBOE http=%{http_code} bytes=%{size_download}\n" "https://cdn.cboe.com/api/global/us_indices/daily_prices/VIX_History.csv" || echo "CBOE UNREACHABLE"
       - name: Fetch new data and rebuild
         if: github.event_name != 'push'
         run: python pipeline/update.py
