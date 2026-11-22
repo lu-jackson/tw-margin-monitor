@@ -123,8 +123,15 @@ def llm_write(facts, feedback=None):
     req = urllib.request.Request(ENDPOINT, data=body, headers={
         "Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28", "Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=90) as r:
-        out = json.loads(r.read().decode("utf-8"))
+    try:
+        with urllib.request.urlopen(req, timeout=90) as r:
+            status, raw = r.status, r.read().decode("utf-8", "replace")
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"HTTP {e.code}: {e.read().decode('utf-8', 'replace')[:240]}")
+    try:
+        out = json.loads(raw)
+    except ValueError:
+        raise RuntimeError(f"non-JSON response (HTTP {status}): {raw[:240]!r}")
     txt = out["choices"][0]["message"]["content"].strip()
     txt = re.sub(r"^```(?:json)?|```$", "", txt, flags=re.M).strip()
     d = json.loads(txt)
